@@ -13,6 +13,7 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <algorithm>
+#include <unordered_set>
 namespace facebook {
 namespace wdt {
 using std::string;
@@ -52,6 +53,7 @@ ServerSocket::~ServerSocket() {
 
 int ServerSocket::listenInternal(struct addrinfo *info,
                                  const std::string &host) {
+  const WdtOptions &options = threadCtx_.getOptions();
   WVLOG(1) << "Will listen on " << host << " " << port_ << " "
            << info->ai_family;
   int listeningFd =
@@ -74,10 +76,20 @@ int ServerSocket::listenInternal(struct addrinfo *info,
       WPLOG(ERROR) << "Unable to set IPV6_V6ONLY flag " << host << " " << port_;
     }
   }
-  if (bind(listeningFd, info->ai_addr, info->ai_addrlen)) {
-    WPLOG(WARNING) << "Error binding " << host << " " << port_;
-    ::close(listeningFd);
-    return -1;
+  if (port_ == 0 && options.port_range_begin != 0 && options.port_range_end != 0) {
+    if (bindFromPortRange(listeningFd, info->ai_addr, info->ai_addrlen, options.port_range_begin,
+                          options.port_range_end)) {
+      WPLOG(WARNING) << "Error binding from range " << host << " " << options.port_range_begin
+                     << "-" << options.port_range_end;
+      ::close(listeningFd);
+      return -1;
+    }
+  } else {
+    if (bind(listeningFd, info->ai_addr, info->ai_addrlen)) {
+      WPLOG(WARNING) << "Error binding " << host << " " << port_;
+      ::close(listeningFd);
+      return -1;
+    }
   }
   if (::listen(listeningFd, backlog_)) {
     WPLOG(ERROR) << "listen error for port " << host << " " << port_;
@@ -85,6 +97,36 @@ int ServerSocket::listenInternal(struct addrinfo *info,
     return -1;
   }
   return listeningFd;
+}
+
+int ServerSocket::bindFromPortRange(int listeningFd,
+                                    struct sockaddr *addr,
+                                    socklen_t addrlen,
+                                    int begin,
+                                    int end) {
+  std::unordered_set<int> failedPorts;
+  sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(addr);
+  int numPorts = end - begin + 1;
+
+  std::random_device rd;
+  std::default_random_engine randomEngine(rd());
+  std::uniform_int_distribution<int> uniform_dist(begin, end);
+
+  while (failedPorts.size() != numPorts) {
+    int port = uniform_dist(randomEngine);
+    while (failedPorts.count(port) > 0 || port == 0) {
+      port = (port + 1) % numPorts;
+    }
+    sin->sin_port = htons(port);
+
+    if (!bind(listeningFd, addr, addrlen)) {
+      return 0;
+    }
+
+    failedPorts.insert(port);
+  }
+
+  return -1;
 }
 
 int ServerSocket::getSelectedPortAndNewAddress(int listeningFd,

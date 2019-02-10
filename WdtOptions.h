@@ -108,6 +108,14 @@ class WdtOptions {
    */
   bool static_ports{false};
   /**
+   * Starting port to use. Must also specify port_range_end.
+   */
+  int32_t port_range_begin{0};
+  /**
+   * Last port to use (inclusive). Must also specify port_range_begin.
+   */
+  int32_t port_range_end{0};
+  /**
    * Maximum buffer size for the write on the sender
    * as well as while reading on receiver.
    */
