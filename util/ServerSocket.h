@@ -70,6 +70,23 @@ class ServerSocket : public WdtSocket {
   int listenInternal(struct addrinfo *info, const std::string &host);
 
   /**
+   * Bind a port from the given range.
+   *
+   * @param listeningFd     socket fd
+   * @param addr            address to listen to
+   * @param addrlen         size of addr
+   * @param begin           starting port to use
+   * @param end             last port to use (inclusive)
+   *
+   * @return 0 on success, -1 in case of error
+   */
+  static int bindFromPortRange(int listeningFd,
+                               struct sockaddr *addr,
+                               socklen_t addrlen,
+                               int begin,
+                               int end);
+
+  /**
    * Returns the selected port and new address list to use
    *
    * @param listeningFd     socket fd
