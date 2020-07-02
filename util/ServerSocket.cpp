@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <algorithm>
 #include <unordered_set>
+#include <random>
 namespace facebook {
 namespace wdt {
 using std::string;
