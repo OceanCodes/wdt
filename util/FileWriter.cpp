@@ -64,8 +64,8 @@ ErrorCode FileWriter::sync() {
     // File was either never opened or already closed
     return OK;
   }
-  if (blockDetails_->atime.tv_sec != 0 || blockDetails_->mtime.tv_sec != 0) {
-    struct timespec times[] = {blockDetails_->atime, blockDetails_->mtime};
+  if (blockDetails_->mtime.tv_sec != 0) {
+    struct timespec times[] = {{0, UTIME_OMIT}, blockDetails_->mtime};
     if (futimens(fd_, times) < 0) {
       WPLOG(ERROR) << "Unable to futimens() fd " << fd_;
       return FILE_WRITE_ERROR;

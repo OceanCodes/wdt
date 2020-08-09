@@ -36,15 +36,13 @@ struct WdtFileInfo {
   /// Whether read should be done using o_direct. If fd is set, this flag will
   /// be set automatically to match the fd open mode
   bool directReads{false};
-  /// File permission.
+  /// File permission
   int32_t permission;
-  /// Last access time.
-  struct timespec atime;
-  /// Modification time;
+  /// Modification time
   struct timespec mtime;
   /// Constructor for file info with name, size, odirect request and permission
   WdtFileInfo(const std::string& name, int64_t size, bool directReads,
-              int32_t perm, const struct timespec& atime, const struct timespec& mtime);
+              int32_t perm, const struct timespec& mtime);
   /// Constructor for file info with name, size and odirect request
   WdtFileInfo(const std::string& name, int64_t size, bool directReads);
   /**

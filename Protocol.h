@@ -220,8 +220,6 @@ struct BlockDetails {
   int64_t prevSeqId{0};
   /// file permission
   int32_t permission{0644};
-  /// last access time
-  struct timespec atime{0};
   /// modification time
   struct timespec mtime{0};
 };
@@ -280,8 +278,8 @@ class Protocol {
   static const int PERIODIC_ENCRYPTION_IV_CHANGE_VERSION;
   /// version from which file permission is preserved during transfer
   static const int PRESERVE_PERMISSION;
-  /// version from which file access & modification times are preserved during transfer
-  static const int PRESERVE_UTIMES;
+  /// version from which file modification times are preserved during transfer
+  static const int PRESERVE_MTIME;
 
   /// Both version, magic number and command byte
   enum CMD_MAGIC {
@@ -311,9 +309,9 @@ class Protocol {
   /// Max size of sender or receiver id
   static constexpr int64_t kMaxTransferIdLength = 1024;
   /// 1 byte for cmd, 2 bytes for file-name length, Max size of filename, 9
-  /// variants(seq-id, data-size, offset, file-size, permission, atime.tv_sec, atime.tv_nsec, mtime.tv_sec, mtime.tv_nsec),
+  /// variants(seq-id, data-size, offset, file-size, permission, mtime.tv_sec, mtime.tv_nsec),
   /// 1 byte for flag, 10 bytes prev seq-id
-  static constexpr int64_t kMaxHeader = 1 + 2 + PATH_MAX + 9 * 10 + 1 + 10;
+  static constexpr int64_t kMaxHeader = 1 + 2 + PATH_MAX + 7 * 10 + 1 + 10;
   /// min number of bytes that must be send to unblock receiver
   static constexpr int64_t kMinBufLength = 256;
   /// max size of done command encoding(1 byte for cmd, 1 for status, 10 for

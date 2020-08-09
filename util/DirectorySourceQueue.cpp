@@ -33,10 +33,9 @@ WdtFileInfo::WdtFileInfo(const string &name, int64_t size, bool doDirectReads)
 }
 
 WdtFileInfo::WdtFileInfo(const string &name, int64_t size, bool doDirectReads,
-                         int32_t perm, const struct timespec& atime, const struct timespec& mtime)
+                         int32_t perm, const struct timespec& mtime)
     : WdtFileInfo(name, size, doDirectReads) {
   permission = perm;
-  this->atime = atime;
   this->mtime = mtime;
 }
 
@@ -374,7 +373,7 @@ bool DirectorySourceQueue::explore() {
           }
           const int perm = getPermission(fileStat.st_mode);
           WdtFileInfo fileInfo(newRelativePath, fileStat.st_size, directReads_,
-                               perm, fileStat.st_atim, fileStat.st_mtim);
+                               perm, fileStat.st_mtim);
           createIntoQueue(newFullPath, fileInfo);
           continue;
         }
@@ -455,7 +454,6 @@ void DirectorySourceQueue::createIntoQueue(const string &fullPath,
   metadata->directReads = fileInfo.directReads;
   metadata->size = fileInfo.fileSize;
   metadata->permission = fileInfo.permission;
-  metadata->atime = fileInfo.atime;
   metadata->mtime = fileInfo.mtime;
   if ((openFilesDuringDiscovery_ != 0) && (metadata->fd < 0)) {
     metadata->fd =
@@ -591,7 +589,6 @@ bool DirectorySourceQueue::enqueueFiles() {
       info.fileSize = fileStat.st_size;
     }
     info.permission = getPermission(fileStat.st_mode);
-    info.atime = fileStat.st_atim;
     info.mtime = fileStat.st_mtim;
     createIntoQueue(fullPath, info);
   }
