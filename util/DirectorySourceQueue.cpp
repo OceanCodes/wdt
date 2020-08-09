@@ -9,7 +9,6 @@
 #include <wdt/util/DirectorySourceQueue.h>
 
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <wdt/Protocol.h>
 #include <algorithm>
@@ -34,9 +33,11 @@ WdtFileInfo::WdtFileInfo(const string &name, int64_t size, bool doDirectReads)
 }
 
 WdtFileInfo::WdtFileInfo(const string &name, int64_t size, bool doDirectReads,
-                         int32_t perm)
+                         int32_t perm, const struct timespec& atime, const struct timespec& mtime)
     : WdtFileInfo(name, size, doDirectReads) {
   permission = perm;
+  this->atime = atime;
+  this->mtime = mtime;
 }
 
 WdtFileInfo::WdtFileInfo(int fd, int64_t size, const string &name)
@@ -373,7 +374,7 @@ bool DirectorySourceQueue::explore() {
           }
           const int perm = getPermission(fileStat.st_mode);
           WdtFileInfo fileInfo(newRelativePath, fileStat.st_size, directReads_,
-                               perm);
+                               perm, fileStat.st_atim, fileStat.st_mtim);
           createIntoQueue(newFullPath, fileInfo);
           continue;
         }
@@ -454,6 +455,8 @@ void DirectorySourceQueue::createIntoQueue(const string &fullPath,
   metadata->directReads = fileInfo.directReads;
   metadata->size = fileInfo.fileSize;
   metadata->permission = fileInfo.permission;
+  metadata->atime = fileInfo.atime;
+  metadata->mtime = fileInfo.mtime;
   if ((openFilesDuringDiscovery_ != 0) && (metadata->fd < 0)) {
     metadata->fd =
         FileUtil::openForRead(*threadCtx_, fullPath, metadata->directReads);
@@ -588,6 +591,8 @@ bool DirectorySourceQueue::enqueueFiles() {
       info.fileSize = fileStat.st_size;
     }
     info.permission = getPermission(fileStat.st_mode);
+    info.atime = fileStat.st_atim;
+    info.mtime = fileStat.st_mtim;
     createIntoQueue(fullPath, info);
   }
   return true;

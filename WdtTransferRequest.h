@@ -10,6 +10,7 @@
 #include <wdt/ErrorCodes.h>
 #include <wdt/Protocol.h>
 #include <wdt/WdtOptions.h>
+#include <sys/types.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -37,9 +38,13 @@ struct WdtFileInfo {
   bool directReads{false};
   /// File permission.
   int32_t permission;
+  /// Last access time.
+  struct timespec atime;
+  /// Modification time;
+  struct timespec mtime;
   /// Constructor for file info with name, size, odirect request and permission
   WdtFileInfo(const std::string& name, int64_t size, bool directReads,
-              int32_t perm);
+              int32_t perm, const struct timespec& atime, const struct timespec& mtime);
   /// Constructor for file info with name, size and odirect request
   WdtFileInfo(const std::string& name, int64_t size, bool directReads);
   /**

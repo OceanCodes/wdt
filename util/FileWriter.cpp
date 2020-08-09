@@ -13,6 +13,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 namespace facebook {
 namespace wdt {
@@ -62,6 +63,13 @@ ErrorCode FileWriter::sync() {
   if (fd_ < 0) {
     // File was either never opened or already closed
     return OK;
+  }
+  if (blockDetails_->atime.tv_sec != 0 || blockDetails_->mtime.tv_sec != 0) {
+    struct timespec times[] = {blockDetails_->atime, blockDetails_->mtime};
+    if (futimens(fd_, times) < 0) {
+      WPLOG(ERROR) << "Unable to futimens() fd " << fd_;
+      return FILE_WRITE_ERROR;
+    }
   }
   const auto &options = threadCtx_.getOptions();
   if (options.fsync || options.isLogBasedResumption()) {

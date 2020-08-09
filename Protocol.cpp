@@ -35,6 +35,7 @@ const int Protocol::VARINT_CHANGE = 27;
 const int Protocol::HEART_BEAT_VERSION = 29;
 const int Protocol::PERIODIC_ENCRYPTION_IV_CHANGE_VERSION = 30;
 const int Protocol::PRESERVE_PERMISSION = 31;
+const int Protocol::PRESERVE_UTIMES = 32;
 
 /* All methods of Protocol class are static (functions) */
 
@@ -153,6 +154,12 @@ bool Protocol::encodeHeader(int senderProtocolVersion, char *dest, int64_t &off,
   if (ok && senderProtocolVersion >= PRESERVE_PERMISSION) {
     ok = encodeVarI64C(dest, umax, off, blockDetails.permission);
   }
+  if (ok && senderProtocolVersion >= PRESERVE_UTIMES) {
+    ok = encodeVarI64C(dest, umax, off, blockDetails.atime.tv_sec);
+    ok = encodeVarI64C(dest, umax, off, blockDetails.atime.tv_nsec);
+    ok = encodeVarI64C(dest, umax, off, blockDetails.mtime.tv_sec);
+    ok = encodeVarI64C(dest, umax, off, blockDetails.mtime.tv_nsec);
+  }
   if (ok && senderProtocolVersion >= HEADER_FLAG_AND_PREV_SEQ_ID_VERSION) {
     uint8_t flags = blockDetails.allocationStatus;
     if (off >= max) {
@@ -185,6 +192,12 @@ bool Protocol::decodeHeader(int receiverProtocolVersion, char *src,
             decodeInt64C(br, blockDetails.fileSize);
   if (ok && receiverProtocolVersion >= PRESERVE_PERMISSION) {
     ok = decodeInt32C(br, blockDetails.permission);
+  }
+  if (ok && receiverProtocolVersion >= PRESERVE_UTIMES) {
+    ok = decodeInt64C(br, blockDetails.atime.tv_sec);
+    ok = decodeInt64C(br, blockDetails.atime.tv_nsec);
+    ok = decodeInt64C(br, blockDetails.mtime.tv_sec);
+    ok = decodeInt64C(br, blockDetails.mtime.tv_nsec);
   }
   if (ok && receiverProtocolVersion >= HEADER_FLAG_AND_PREV_SEQ_ID_VERSION) {
     if (br.empty()) {

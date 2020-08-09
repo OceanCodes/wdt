@@ -326,6 +326,8 @@ TransferStats SenderThread::sendOneByteSource(
   blockDetails.allocationStatus = metadata.allocationStatus;
   blockDetails.prevSeqId = metadata.prevSeqId;
   blockDetails.permission = metadata.permission;
+  blockDetails.atime = metadata.atime;
+  blockDetails.mtime = metadata.mtime;
   Protocol::encodeHeader(wdtParent_->getProtocolVersion(), headerBuf, off,
                          Protocol::kMaxHeader, blockDetails);
   int16_t littleEndianOff = folly::Endian::little((int16_t)off);

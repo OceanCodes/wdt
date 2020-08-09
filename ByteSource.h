@@ -46,6 +46,10 @@ struct SourceMetaData {
   int64_t prevSeqId{0};
   /// file permission.
   int32_t permission{0};
+  /// last access time
+  struct timespec atime{0};
+  /// modification time
+  struct timespec mtime{0};
   /// If true, files are read using O_DIRECT or F_NOCACHE
   bool directReads{false};
   /// File descriptor. If this is not -1, then wdt uses this to read
